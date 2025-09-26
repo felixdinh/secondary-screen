@@ -1,11 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:presentation_displays/secondary_display.dart';
 
 class PromotionScreen extends StatefulWidget {
   const PromotionScreen({super.key});
 
   @override
   State<PromotionScreen> createState() => _PromotionScreenState();
+}
+
+class LandscapePromotionScreen extends StatelessWidget {
+  const LandscapePromotionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RotatedBox(
+      quarterTurns: 1,
+      child: const PromotionScreen(),
+    );
+  }
 }
 
 class _PromotionScreenState extends State<PromotionScreen> {
@@ -20,6 +33,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
 
   late Timer _timer;
   int _currentIndex = 0;
+   String value = "init";
 
   @override
   void initState() {
@@ -46,16 +60,24 @@ class _PromotionScreenState extends State<PromotionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SizedBox.expand(
-        child: AnimatedSwitcher(
-          duration: _fadeDuration,
-          switchInCurve: Curves.easeIn,
-          switchOutCurve: Curves.easeOut,
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: child,
+      body: SecondaryDisplay(
+        callback: (display) {
+          debugPrint('display: $display');
+          setState(() {
+            value = display;
+          });
+        },
+        child: SizedBox.expand(
+          child: AnimatedSwitcher(
+            duration: _fadeDuration,
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: _buildImage(_imageUrls[_currentIndex], _currentIndex),
           ),
-          child: _buildImage(_imageUrls[_currentIndex], _currentIndex),
         ),
       ),
     );
