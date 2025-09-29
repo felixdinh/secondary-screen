@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:presentation_displays/secondary_display.dart';
 
 class PromotionScreen extends StatefulWidget {
@@ -7,18 +8,6 @@ class PromotionScreen extends StatefulWidget {
 
   @override
   State<PromotionScreen> createState() => _PromotionScreenState();
-}
-
-class LandscapePromotionScreen extends StatelessWidget {
-  const LandscapePromotionScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return RotatedBox(
-      quarterTurns: 1,
-      child: const PromotionScreen(),
-    );
-  }
 }
 
 class _PromotionScreenState extends State<PromotionScreen> {
@@ -53,6 +42,9 @@ class _PromotionScreenState extends State<PromotionScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    // Restore orientations and system UI when leaving this screen
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
 

@@ -58,17 +58,19 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
 import 'package:presentation_displays/secondary_display.dart';
 import 'package:secondary_screen/promotion_screen.dart';
+import 'package:secondary_screen/secondary_screen_service.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
     case '/':
       return MaterialPageRoute(builder: (_) => const DisplayManagerScreen());
     case 'presentation':
-      return MaterialPageRoute(builder: (_) => const LandscapePromotionScreen());
+      return MaterialPageRoute(builder: (_) => const PromotionScreen());
     default:
       return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -85,8 +87,15 @@ void main() {
 
 @pragma('vm:entry-point')
 void secondaryDisplayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+   SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+    ]);
+   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+   runApp(const MySecondApp());
+      
   debugPrint('second main');
-  runApp(const MySecondApp());
 }
 
 class MySecondApp extends StatelessWidget {
