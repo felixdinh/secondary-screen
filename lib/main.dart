@@ -59,11 +59,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
 import 'package:presentation_displays/secondary_display.dart';
 import 'package:secondary_screen/promotion_screen.dart';
-import 'package:secondary_screen/secondary_screen_service.dart';
+import 'package:secondary_screen/dual_screen_service/src/dual_screen_service.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -99,7 +100,7 @@ void secondaryDisplayMain() {
 }
 
 class MySecondApp extends StatelessWidget {
-  const MySecondApp({Key? key}) : super(key: key);
+  const MySecondApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -111,13 +112,16 @@ class MySecondApp extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      onGenerateRoute: generateRoute,
-      initialRoute: '/',
+    return BlocProvider(
+      create: (context) => DualScreenCubit(),
+      child: const MaterialApp(
+        onGenerateRoute: generateRoute,
+        initialRoute: '/',
+      ),
     );
   }
 }
@@ -126,8 +130,7 @@ class Button extends StatelessWidget {
   final String title;
   final VoidCallback? onPressed;
 
-  const Button({Key? key, required this.title, this.onPressed})
-      : super(key: key);
+  const Button({super.key, required this.title, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -146,10 +149,10 @@ class Button extends StatelessWidget {
 
 /// Main Screen
 class DisplayManagerScreen extends StatefulWidget {
-  const DisplayManagerScreen({Key? key}) : super(key: key);
+  const DisplayManagerScreen({super.key});
 
   @override
-  _DisplayManagerScreenState createState() => _DisplayManagerScreenState();
+  State<DisplayManagerScreen> createState() => _DisplayManagerScreenState();
 }
 
 class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
@@ -187,12 +190,32 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              // Show current state of SecondaryScreenCubit
+              BlocBuilder<DualScreenCubit, DualScreenState>(
+                builder: (context, state) {
+                  return Card(
+                    margin: const EdgeInsets.all(8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Secondary Screen Status: ${state.status.name}'),
+                          Text('Current Display ID: ${state.defaultSecondaryDisplayId ?? 'None'}'),
+                          Text('Current Route: ${state.currentRoute ?? 'None'}'),
+                          Text('Is Loading: ${state.isLoading}'),
+                          if (state.error != null) Text('Error: ${state.error}'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
               _getDisplays(),
+              _initSecondaryScreen(),
               _showPresentation(),
               _hidePresentation(),
               _transferData(),
-              _getDisplayeById(),
-              _getDisplayByIndex(),
             ],
           ),
         ),
@@ -232,69 +255,50 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
     );
   }
 
-  Widget _showPresentation() {
+  Widget _initSecondaryScreen() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _indexToShareController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Index to share screen',
-            ),
-          ),
-        ),
         Button(
-            title: "Show presentation",
+            title: "Initialize Secondary Screen Service",
             onPressed: () async {
-              int? displayId = int.tryParse(_indexToShareController.text);
-              if (displayId != null) {
-                for (final display in displays) {
-                  if (display?.displayId == displayId) {
-                    displayManager.showSecondaryDisplay(
-                        displayId: displayId, routerName: "presentation");
-                  }
-                }
-              }
+              final cubit = context.read<DualScreenCubit>();
+              await cubit.init(autoShow: true, defaultRouterName: 'presentation');
+            }),
+        Button(
+            title: "Show on Secondary (Cubit)",
+            onPressed: () async {
+              final cubit = context.read<DualScreenCubit>();
+              await cubit.showOnSecondary('presentation', data: {'message': 'Hello from Cubit!'});
+            }),
+        Button(
+            title: "Update Data on Secondary (Cubit)",
+            onPressed: () async {
+              final cubit = context.read<DualScreenCubit>();
+              await cubit.updateDataOnSecondary({'message': 'Updated data from Cubit!'});
             }),
         const Divider(),
       ],
     );
   }
 
+  Widget _showPresentation() {
+    return Button(
+        title: "Show current display",
+        onPressed: () async {
+          final cubit = context.read<DualScreenCubit>();
+          await cubit.showOnSecondary('presentation');
+        });
+  }
+
   Widget _hidePresentation() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _indexToShareController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Index to hide screen',
-            ),
-          ),
-        ),
-        Button(
-            title: "Hide presentation",
-            onPressed: () async {
-              int? displayId = int.tryParse(_indexToShareController.text);
-              if (displayId != null) {
-                for (final display in displays) {
-                  if (display?.displayId == displayId) {
-                    displayManager.hideSecondaryDisplay(displayId: displayId);
-                  }
-                }
-              }
-            }),
-        const Divider(),
-      ],
-    );
+    return Button(
+        title: "Hide presentation",
+        onPressed: () async {
+          final cubit = context.read<DualScreenCubit>();
+          await cubit.hideOnSecondary(clearData: true);
+        });
   }
 
   Widget _transferData() {
@@ -322,85 +326,14 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
       ],
     );
   }
-
-  Widget _getDisplayeById() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _nameOfIdController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Id',
-            ),
-          ),
-        ),
-        Button(
-            title: "NameByDisplayId",
-            onPressed: () async {
-              int? id = int.tryParse(_nameOfIdController.text);
-              if (id != null) {
-                final value = await displayManager
-                    .getNameByDisplayId(displays[id]?.displayId ?? -1);
-                setState(() {
-                  _nameOfId = value ?? "";
-                });
-              }
-            }),
-        SizedBox(
-          height: 50,
-          child: Center(child: Text(_nameOfId)),
-        ),
-        const Divider(),
-      ],
-    );
-  }
-
-  Widget _getDisplayByIndex() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _nameOfIndexController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Index',
-            ),
-          ),
-        ),
-        Button(
-            title: "NameByIndex",
-            onPressed: () async {
-              int? index = int.tryParse(_nameOfIndexController.text);
-              if (index != null) {
-                final value = await displayManager.getNameByIndex(index);
-                setState(() {
-                  _nameOfIndex = value ?? "";
-                });
-              }
-            }),
-        SizedBox(
-          height: 50,
-          child: Center(child: Text(_nameOfIndex)),
-        ),
-        const Divider(),
-      ],
-    );
-  }
 }
 
 /// UI of Presentation display
 class SecondaryScreen extends StatefulWidget {
-  const SecondaryScreen({Key? key}) : super(key: key);
+  const SecondaryScreen({super.key});
 
   @override
-  _SecondaryScreenState createState() => _SecondaryScreenState();
+  State<SecondaryScreen> createState() => _SecondaryScreenState();
 }
 
 class _SecondaryScreenState extends State<SecondaryScreen> {
