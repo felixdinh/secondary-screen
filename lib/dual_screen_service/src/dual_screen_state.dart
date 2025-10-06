@@ -10,7 +10,7 @@ class DualScreenState {
   final DualScreenServiceState status;
   final Display? currentSecondaryDisplay;
   final String? currentRoute;
-  final Map<String,dynamic>? currentData;
+  final String? currentData;
   final bool isLoading;
   final String? error;
 
@@ -27,7 +27,7 @@ class DualScreenState {
     DualScreenServiceState? status,
     Display? currentSecondaryDisplay,
     String? currentRoute,
-    Map<String,dynamic>? currentData,
+    String? currentData,
     bool? isLoading,
     String? error,
   }) {

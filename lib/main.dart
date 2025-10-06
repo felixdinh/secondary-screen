@@ -1,70 +1,14 @@
-// import 'package:flutter/material.dart';
-// import 'package:secondary_screen/home_screen.dart';
-// import 'package:secondary_screen/promotion_screen.dart';
-
-// void main() {
-//   runApp(const MyApp());
-// }
-
-// @pragma('vm:entry-point')
-// void secondaryDisplayMain() {
-//   debugPrint('second main');
-//   runApp(const SecondaryApp());
-// }
-
-
-// Route<dynamic> generateRoute(RouteSettings settings) {
-//   switch (settings.name) {
-//     case '/':
-//       return MaterialPageRoute(builder: (_) => const HomeScreen());
-//     case 'presentation':
-//       return MaterialPageRoute(builder: (_) => const PromotionScreen());
-//     default:
-//       return MaterialPageRoute(
-//           builder: (_) => Scaffold(
-//                 body: Center(
-//                     child: Text('No route defined for ${settings.name}')),
-//               ));
-//   }
-// }
-
-
-
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-  
-//   @override
-//   Widget build(BuildContext context) {
-//    return const MaterialApp(
-//       onGenerateRoute: generateRoute,
-//       initialRoute: '/',
-//     );
-//   }
-// }
-
-// class SecondaryApp extends StatelessWidget {
-//   const SecondaryApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//    return const MaterialApp(
-//       onGenerateRoute: generateRoute,
-//       initialRoute: 'presentation',
-
-//     );
-//   }
-// }
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
-import 'package:presentation_displays/secondary_display.dart';
+import 'package:secondary_screen/dual_screen_service/src/transfer_data_model.dart';
 import 'package:secondary_screen/promotion_screen.dart';
 import 'package:secondary_screen/dual_screen_service/src/dual_screen_service.dart';
+import 'package:secondary_screen/todo_screen.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -72,6 +16,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const DisplayManagerScreen());
     case 'presentation':
       return MaterialPageRoute(builder: (_) => const PromotionScreen());
+    case 'todo_list':
+      return MaterialPageRoute(builder: (_) => const TodoScreen());
     default:
       return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -159,17 +105,12 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
   DisplayManager displayManager = DisplayManager();
   List<Display?> displays = [];
 
-  final TextEditingController _indexToShareController = TextEditingController();
-  final TextEditingController _dataToTransferController =
-      TextEditingController();
-
-  final TextEditingController _nameOfIdController = TextEditingController();
-  String _nameOfId = "";
-  final TextEditingController _nameOfIndexController = TextEditingController();
-  String _nameOfIndex = "";
+  final TextEditingController _dataToTransferController = TextEditingController();
+  final List<TodoItem> _todoList = [];
 
   @override
   void initState() {
+    context.read<DualScreenCubit>().init(autoShow: true, defaultRouterName: 'presentation');
     displayManager.connectedDisplaysChangedStream?.listen(
       (event) {
         debugPrint("connected displays changed: $event");
@@ -212,7 +153,6 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
                 },
               ),
               _getDisplays(),
-              _initSecondaryScreen(),
               _showPresentation(),
               _hidePresentation(),
               _transferData(),
@@ -255,34 +195,6 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
     );
   }
 
-  Widget _initSecondaryScreen() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Button(
-            title: "Initialize Secondary Screen Service",
-            onPressed: () async {
-              final cubit = context.read<DualScreenCubit>();
-              await cubit.init(autoShow: true, defaultRouterName: 'presentation');
-            }),
-        Button(
-            title: "Show on Secondary (Cubit)",
-            onPressed: () async {
-              final cubit = context.read<DualScreenCubit>();
-              await cubit.showOnSecondary('presentation', data: {'message': 'Hello from Cubit!'});
-            }),
-        Button(
-            title: "Update Data on Secondary (Cubit)",
-            onPressed: () async {
-              final cubit = context.read<DualScreenCubit>();
-              await cubit.updateDataOnSecondary({'message': 'Updated data from Cubit!'});
-            }),
-        const Divider(),
-      ],
-    );
-  }
-
   Widget _showPresentation() {
     return Button(
         title: "Show current display",
@@ -312,48 +224,43 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
             controller: _dataToTransferController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Data to transfer',
+              labelText: 'Enter task name',
             ),
           ),
         ),
         Button(
-            title: "TransferData",
+            title: "Add task",
             onPressed: () async {
-              String data = _dataToTransferController.text;
-              await displayManager.transferDataToPresentation(data);
+              String data = _dataToTransferController.text.trim();
+              if (data.isEmpty) {
+                debugPrint('❌ Task name is empty');
+                return;
+              }
+              
+              final todo = TodoItem(id: _todoList.length + 1, taskName: data);
+              _todoList.add(todo);
+              
+              debugPrint('📝 Adding task: ${todo.toJson()}');
+              debugPrint('📋 Total tasks in main: ${_todoList.length}');
+              
+              final cubit = context.read<DualScreenCubit>();
+              final request = TransferDataModel(
+                eventName: 'add_todo',
+                data: todo.toJson(),
+              );
+              final success = await cubit.showOnSecondary(
+                'todo_list',
+                json: jsonEncode(request.toJson()),
+              );
+              if (success) {
+                debugPrint('✅ Task added successfully');
+                _dataToTransferController.clear();
+              } else {
+                debugPrint('❌ Failed to add task');
+              }
             }),
         const Divider(),
       ],
     );
-  }
-}
-
-/// UI of Presentation display
-class SecondaryScreen extends StatefulWidget {
-  const SecondaryScreen({super.key});
-
-  @override
-  State<SecondaryScreen> createState() => _SecondaryScreenState();
-}
-
-class _SecondaryScreenState extends State<SecondaryScreen> {
-  String value = "init";
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: SecondaryDisplay(
-      callback: (dynamic argument) {
-        setState(() {
-          value = argument;
-        });
-      },
-      child: Container(
-        color: Colors.white,
-        child: Center(
-          child: Text(value),
-        ),
-      ),
-    ));
   }
 }
