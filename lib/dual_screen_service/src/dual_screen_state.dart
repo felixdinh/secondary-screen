@@ -13,6 +13,7 @@ class DualScreenState {
   final String? currentData;
   final bool isLoading;
   final String? error;
+  final List<Display>? availableDisplays; 
 
   const DualScreenState({
     this.status = DualScreenServiceState.initial,
@@ -21,6 +22,7 @@ class DualScreenState {
     this.currentData,
     this.isLoading = false,
     this.error,
+    this.availableDisplays,
   });
 
   DualScreenState copyWith({
@@ -30,6 +32,7 @@ class DualScreenState {
     String? currentData,
     bool? isLoading,
     String? error,
+    List<Display>? availableDisplays,
   }) {
     return DualScreenState(
       status: status ?? this.status,
@@ -38,6 +41,7 @@ class DualScreenState {
       currentData: currentData ?? this.currentData,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
+      availableDisplays: availableDisplays ?? this.availableDisplays,
     );
   }
 

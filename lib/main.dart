@@ -102,10 +102,12 @@ class DisplayManagerScreen extends StatefulWidget {
 }
 
 class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
+  late final DualScreenCubit dualSrv = context.read<DualScreenCubit>();
   DisplayManager displayManager = DisplayManager();
   List<Display?> displays = [];
 
   final TextEditingController _dataToTransferController = TextEditingController();
+  final TextEditingController _secondaryDisplayIdController = TextEditingController();
   final List<TodoItem> _todoList = [];
 
   @override
@@ -125,98 +127,108 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
       appBar: AppBar(
         title: const Text('Plugin example app'),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              // Show current state of SecondaryScreenCubit
-              BlocBuilder<DualScreenCubit, DualScreenState>(
-                builder: (context, state) {
-                  return Card(
-                    margin: const EdgeInsets.all(8.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Secondary Screen Status: ${state.status.name}'),
-                          Text('Current Display ID: ${state.defaultSecondaryDisplayId ?? 'None'}'),
-                          Text('Current Route: ${state.currentRoute ?? 'None'}'),
-                          Text('Is Loading: ${state.isLoading}'),
-                          if (state.error != null) Text('Error: ${state.error}'),
-                        ],
+      floatingActionButton: BlocBuilder<DualScreenCubit, DualScreenState>(
+        builder: (context, state) {
+          final isConnected = state.status == DualScreenServiceState.connected;
+          return FloatingActionButton(
+            onPressed: isConnected
+                ? () async {
+                    await dualSrv.hideOnSecondary(clearData: true);
+                  }
+                : dualSrv.reConnectCurrentRoute,
+            child: Icon(Icons.power_settings_new,
+                color: isConnected ? Colors.red : Colors.green),
+          );
+        },
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+
+          children: <Widget>[
+            // Show current state of SecondaryScreenCubit
+            BlocBuilder<DualScreenCubit, DualScreenState>(
+              builder: (context, state) {
+                return Row(
+                  children: [
+                    _getDisplays(),
+
+                    Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total displays: ${displays.length}'),
+                            const SizedBox(height: 8),
+                            ...displays.map((d) => Text('ID: ${d?.displayId}, Name: ${d?.name}')),
+                          ],
+                        ),
                       ),
                     ),
-                  );
-                },
-              ),
-              _getDisplays(),
-              _showPresentation(),
-              _hidePresentation(),
-              _transferData(),
-            ],
-          ),
+                    Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Secondary Screen Status: ${state.status.name}'),
+                            Text('Current Display ID: ${state.defaultSecondaryDisplayId ?? 'None'}'),
+                            Text('Current Route: ${state.currentRoute ?? 'None'}'),
+                            Text('Is Loading: ${state.isLoading}'),
+                            if (state.error != null) Text('Error: ${state.error}'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const Divider(),
+            _connectSecondaryDisplay(),
+             const Divider(),
+            _transferData(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _getDisplays() {
+  Widget _connectSecondaryDisplay() {
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Button(
-            title: "Get Displays",
-            onPressed: () async {
-              final values = await displayManager.getDisplays();
-              displays.clear();
-              setState(() {
-                displays.addAll(values!);
-              });
-            }),
-        ListView.builder(
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(8),
-            itemCount: displays.length,
-            itemBuilder: (BuildContext context, int index) {
-              return SizedBox(
-                height: 50,
-                child: Center(
-                    child: Text(
-                        ' ${displays[index]?.displayId} ${displays[index]?.name}')),
-              );
-            }),
-        const Divider()
+        TextField(
+          controller: _secondaryDisplayIdController,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'Enter secondary display ID',
+          ),
+        ),
+        Button(title: "Connect Secondary Display", onPressed: () async {
+          await dualSrv.init(autoShow: true);
+        }),
       ],
     );
   }
 
-  Widget _showPresentation() {
+  Widget _getDisplays() {
     return Button(
-        title: "Show current display",
+        title: "Get Displays",
         onPressed: () async {
-          final cubit = context.read<DualScreenCubit>();
-          await cubit.showOnSecondary('presentation');
-        });
-  }
-
-  Widget _hidePresentation() {
-    return Button(
-        title: "Hide presentation",
-        onPressed: () async {
-          final cubit = context.read<DualScreenCubit>();
-          await cubit.hideOnSecondary(clearData: true);
-        });
+          final values = await displayManager.getDisplays();
+          displays.clear();
+          setState(() {
+            displays.addAll(values!);
+          });
+    });
   }
 
   Widget _transferData() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -230,37 +242,69 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
         ),
         Button(
             title: "Add task",
-            onPressed: () async {
-              String data = _dataToTransferController.text.trim();
-              if (data.isEmpty) {
-                debugPrint('❌ Task name is empty');
-                return;
-              }
-              
-              final todo = TodoItem(id: _todoList.length + 1, taskName: data);
-              _todoList.add(todo);
-              
-              debugPrint('📝 Adding task: ${todo.toJson()}');
-              debugPrint('📋 Total tasks in main: ${_todoList.length}');
-              
-              final cubit = context.read<DualScreenCubit>();
-              final request = TransferDataModel(
-                eventName: 'add_todo',
-                data: todo.toJson(),
-              );
-              final success = await cubit.showOnSecondary(
-                'todo_list',
-                json: jsonEncode(request.toJson()),
-              );
-              if (success) {
-                debugPrint('✅ Task added successfully');
-                _dataToTransferController.clear();
-              } else {
-                debugPrint('❌ Failed to add task');
-              }
-            }),
-        const Divider(),
+            onPressed: _addTask,
+          ) ,
+           ListView.separated(
+             shrinkWrap: true,
+             physics: NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) => ListTile(
+              onTap: () => _doneTask(index),
+                  title: Text(_todoList[index].taskName),
+                ),
+            separatorBuilder: (_, __) => SizedBox(height: 2),
+            itemCount: _todoList.length,
+          )
       ],
+    );
+  }
+
+  void _addTask() async {
+    String data = _dataToTransferController.text.trim();
+    if (data.isEmpty) {
+      debugPrint('❌ Task name is empty');
+      return;
+    }
+
+    final todo = TodoItem(id: _todoList.length + 1, taskName: data);
+    _todoList.add(todo);
+
+    debugPrint('📝 Adding task: ${todo.toJson()}');
+    debugPrint('📋 Total tasks in main: ${_todoList.length}');
+
+    final cubit = context.read<DualScreenCubit>();
+    final request = TransferDataModel(
+      eventName: 'add_todo',
+      data: todo.toJson(),
+    );
+    final success = await cubit.showOnSecondary(
+      'todo_list',
+      json: jsonEncode(request.toJson()),
+    );
+    if (success) {
+      debugPrint('✅ Task added successfully');
+      setState(() {});
+      _dataToTransferController.clear();
+    } else {
+      debugPrint('❌ Failed to add task');
+    }
+  }
+
+  void _doneTask(int index) {
+    final element = _todoList[index].copyWith(isCompleted: !_todoList[index].isCompleted);
+    setState(() {
+      _todoList
+      ..removeAt(index)
+      ..insert(index, element);
+    });
+    debugPrint('✅ Toggling task completion: ${_todoList[index].toJson()}');
+    final cubit = context.read<DualScreenCubit>();
+    final request = TransferDataModel(
+      eventName: 'update_todo',
+      data: _todoList[index].toJson(),
+    );
+    cubit.showOnSecondary(
+      'todo_list',
+      json: jsonEncode(request.toJson()),
     );
   }
 }
