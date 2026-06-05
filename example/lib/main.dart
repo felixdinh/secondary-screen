@@ -28,7 +28,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 }
 
 void main() {
-  debugPrint('first main');
   runApp(const MyApp());
 }
 
@@ -41,8 +40,6 @@ void secondaryDisplayMain() {
   ]);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const MySecondApp());
-
-  debugPrint('second main');
 }
 
 class MySecondApp extends StatelessWidget {
@@ -113,9 +110,7 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
   void initState() {
     context.read<DualScreenCubit>().init(autoShow: true, defaultRouterName: 'presentation');
     displayManager.connectedDisplaysChangedStream?.listen(
-      (event) {
-        debugPrint("connected displays changed: $event");
-      },
+      (event) {},
     );
     super.initState();
   }
@@ -255,16 +250,10 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
 
   void _addTask() async {
     String data = _dataToTransferController.text.trim();
-    if (data.isEmpty) {
-      debugPrint('❌ Task name is empty');
-      return;
-    }
+    if (data.isEmpty) return;
 
     final todo = TodoItem(id: _todoList.length + 1, taskName: data);
     _todoList.add(todo);
-
-    debugPrint('📝 Adding task: ${todo.toJson()}');
-    debugPrint('📋 Total tasks in main: ${_todoList.length}');
 
     final cubit = context.read<DualScreenCubit>();
     final request = TransferDataModel(
@@ -276,11 +265,8 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
       json: jsonEncode(request.toJson()),
     );
     if (success) {
-      debugPrint('✅ Task added successfully');
       setState(() {});
       _dataToTransferController.clear();
-    } else {
-      debugPrint('❌ Failed to add task');
     }
   }
 
@@ -291,7 +277,6 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
         ..removeAt(index)
         ..insert(index, element);
     });
-    debugPrint('✅ Toggling task completion: ${_todoList[index].toJson()}');
     final cubit = context.read<DualScreenCubit>();
     final request = TransferDataModel(
       eventName: 'update_todo',

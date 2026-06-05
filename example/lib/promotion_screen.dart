@@ -36,9 +36,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SecondaryDisplay(
-        callback: (args) {
-          debugPrint('display: $args');
-        },
+        callback: (args) {},
         child: Stack(
           fit: StackFit.expand,
           alignment: Alignment.center,

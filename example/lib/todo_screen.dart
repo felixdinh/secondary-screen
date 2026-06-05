@@ -15,13 +15,9 @@ class _TodoScreenState extends State<TodoScreen> {
   Widget build(BuildContext context) {
     return SecondaryDisplay(
       callback: (args) {
-        debugPrint('📥 TodoScreen received args: $args (type: ${args.runtimeType})');
         if (args is Map) {
           final Map<String, dynamic> dataMap = Map<String, dynamic>.from(args);
           _extractData(dataMap);
-        } else {
-          debugPrint('❌ Invalid args received in TodoScreen: $args');
-          debugPrint('dataType: ${args.runtimeType}');
         }
       },
       child: Scaffold(
@@ -73,64 +69,42 @@ class _TodoScreenState extends State<TodoScreen> {
   }
 
   void _onAddTodo(TodoItem task) {
-    if (task.taskName.isEmpty) {
-      debugPrint('❌ Task name is empty, skipping');
-      return;
-    }
+    if (task.taskName.isEmpty) return;
 
     final existingTaskIndex = _todoList.indexWhere((t) => t.id == task.id);
     if (existingTaskIndex != -1) {
-      debugPrint('🔄 Updating existing task: ${task.taskName}');
       _todoList[existingTaskIndex] = task;
     } else {
-      debugPrint('➕ Adding new task: ${task.taskName}');
       _todoList.add(task);
     }
 
-    debugPrint('📋 Total tasks in TodoScreen: ${_todoList.length}');
     setState(() {});
   }
 
   void _extractData(Map<String, dynamic> args) {
-    debugPrint('TodoScreen received data: $args');
     if (args.containsKey('event_name') && args.containsKey('data')) {
       final eventName = args['event_name'] as String?;
       final data = args['data'];
       switch (eventName) {
         case 'add_todo':
           if (data is Map) {
-            final taskData = Map<String, dynamic>.from(data);
-            debugPrint('Task data (add_todo): $taskData');
-            _onAddTodo(TodoItem.fromJson(taskData));
-          } else {
-            debugPrint('❌ Data in add_todo is not a Map: $data (type: ${data.runtimeType})');
+            _onAddTodo(TodoItem.fromJson(Map<String, dynamic>.from(data)));
           }
           break;
         case 'update_todo':
           if (data is Map) {
-            final taskData = Map<String, dynamic>.from(data);
-            debugPrint('Task data (update_todo): $taskData');
-            _onUpdateTodo(TodoItem.fromJson(taskData));
-          } else {
-            debugPrint('❌ Data in update_todo is not a Map: $data (type: ${data.runtimeType})');
+            _onUpdateTodo(TodoItem.fromJson(Map<String, dynamic>.from(data)));
           }
           break;
-        default:
-          debugPrint('❌ Unknown event_name: $eventName');
       }
-    } else {
-      debugPrint('❌ Invalid event data: $args');
     }
   }
 
   void _onUpdateTodo(TodoItem updatedTask) {
     final index = _todoList.indexWhere((t) => t.id == updatedTask.id);
     if (index != -1) {
-      debugPrint('🔄 Updating task completion: ${updatedTask.toJson()}');
       _todoList[index] = updatedTask;
       setState(() {});
-    } else {
-      debugPrint('❌ Task to update not found: ${updatedTask.id}');
     }
   }
 }

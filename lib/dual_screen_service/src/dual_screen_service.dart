@@ -1,7 +1,6 @@
 
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
@@ -18,8 +17,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
   DualScreenCubit._internal() : super(const DualScreenState());
 
   Future<void> init({bool autoShow = true, String defaultRouterName = 'presentation'}) async {
-    debugPrint('💁init:\n defaultRouterName: $defaultRouterName\n autoShow: $autoShow');
-
     emit(state.copyWith(isLoading: true, error: null));
 
     try {
@@ -33,7 +30,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         ));
       }
       if (autoShow && defaultSecondaryDisplay != null) {
-        // Reset currentRoute trước khi show để đảm bảo showSecondaryDisplay được gọi
         emit(state.copyWith(currentRoute: null));
         await showOnSecondary(defaultRouterName);
       }
@@ -46,8 +42,7 @@ class DualScreenCubit extends Cubit<DualScreenState> {
     _handleReConnect();
   }
 
-  Future<bool> showOnSecondary(String routeName,{String? json}) async {
-    debugPrint('🔄 showOnSecondary: $routeName, currentRoute: ${state.currentRoute}');
+  Future<bool> showOnSecondary(String routeName, {String? json}) async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       if (state.currentSecondaryDisplay?.displayId == null) {
@@ -59,7 +54,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
       }
 
       if (state.currentRoute != routeName) {
-        debugPrint('📱 Calling showSecondaryDisplay for route: $routeName');
         await _displayManager.showSecondaryDisplay(
           displayId: state.currentSecondaryDisplay!.displayId!,
           routerName: routeName,
@@ -67,11 +61,8 @@ class DualScreenCubit extends Cubit<DualScreenState> {
       }
 
       if (json != null) {
-        debugPrint('📤 Transferring data: $json');
-        // Parse JSON string to Map before transferring
         final Map<String, dynamic> dataMap = jsonDecode(json);
         await _displayManager.transferDataToPresentation(dataMap);
-        debugPrint('✅ Data transferred successfully');
       }
       emit(state.copyWith(
         isLoading: false,
@@ -87,7 +78,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
   }
 
   Future<bool> hideOnSecondary({bool clearData = false}) async {
-    debugPrint("hideSecondaryScreen[clearData] = $clearData");
     emit(state.copyWith(isLoading: true, error: null));
     try {
       if (state.currentSecondaryDisplay?.displayId == null) {
@@ -95,7 +85,7 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         return false;
       }
       await _displayManager.hideSecondaryDisplay(displayId: state.currentSecondaryDisplay!.displayId!);
-      
+
       emit(state.copyWith(
         isLoading: false,
         currentRoute: null,
@@ -109,18 +99,15 @@ class DualScreenCubit extends Cubit<DualScreenState> {
     }
   }
 
-  Future reConnectCurrentRoute() async { 
+  Future reConnectCurrentRoute() async {
     if (state.currentRoute != null) {
-      debugPrint('🔄 Reconnected to route: ${state.currentRoute}, on display ${state.currentSecondaryDisplay?.displayId}');
-
       await showOnSecondary(state.currentRoute!);
 
-      emit( state.copyWith(
+      emit(state.copyWith(
         status: DualScreenServiceState.connected,
       ));
     }
     return false;
-
   }
 
   Future<bool> updateDataOnSecondary(String data) async {
@@ -147,7 +134,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
 
   Future<void> _handleReConnect() async {
     _displayManager.connectedDisplaysChangedStream?.listen((displayCount) async {
-      debugPrint('connected displays changed: $displayCount');
       if (displayCount == 0) {
         emit(state.copyWith(
           currentSecondaryDisplay: null,
@@ -158,7 +144,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         }
         return;
       }
-      debugPrint('connected displays changed: $displayCount');
       final displays = await _displayManager.getDisplays();
       final newDisplay = displays!.first;
       emit(state.copyWith(
@@ -166,7 +151,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         currentSecondaryDisplay: newDisplay,
         status: DualScreenServiceState.connected,
       ));
-      debugPrint('connected default ${newDisplay.displayId}:');
       if (state.currentRoute != null) {
         showOnSecondary(state.currentRoute!);
       }
