@@ -1,30 +1,62 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:secondary_screen/main.dart';
+import 'package:secondary_screen/dual_screen_service/dual_screen_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('TransferDataModel', () {
+    test('toJson serializes correctly', () {
+      final model = TransferDataModel(
+        eventName: 'add_todo',
+        data: {'id': 1, 'taskName': 'Test task'},
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      final json = model.toJson();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      expect(json['event_name'], 'add_todo');
+      expect(json['data'], {'id': 1, 'taskName': 'Test task'});
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('fromJson deserializes correctly', () {
+      final json = {
+        'event_name': 'update_todo',
+        'data': {'id': 2, 'taskName': 'Another task', 'isCompleted': true},
+      };
+
+      final model = TransferDataModel.fromJson(json);
+
+      expect(model.eventName, 'update_todo');
+      expect(model.data['id'], 2);
+      expect(model.data['isCompleted'], true);
+    });
+  });
+
+  group('DualScreenState', () {
+    test('initial state has correct defaults', () {
+      const state = DualScreenState();
+
+      expect(state.status, DualScreenServiceState.initial);
+      expect(state.isLoading, false);
+      expect(state.error, isNull);
+      expect(state.currentRoute, isNull);
+      expect(state.currentSecondaryDisplay, isNull);
+    });
+
+    test('copyWith updates only specified fields', () {
+      const state = DualScreenState();
+
+      final updated = state.copyWith(
+        isLoading: true,
+        status: DualScreenServiceState.connected,
+      );
+
+      expect(updated.isLoading, true);
+      expect(updated.status, DualScreenServiceState.connected);
+      expect(updated.error, isNull);
+      expect(updated.currentRoute, isNull);
+    });
+
+    test('defaultSecondaryDisplayId returns null when no display', () {
+      const state = DualScreenState();
+      expect(state.defaultSecondaryDisplayId, isNull);
+    });
   });
 }
