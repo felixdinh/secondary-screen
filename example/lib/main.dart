@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:presentation_displays/display.dart';
-import 'package:presentation_displays/displays_manager.dart';
-import 'package:secondary_screen/dual_screen_service/dual_screen_service.dart';
+import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
 
 import 'promotion_screen.dart';
 import 'todo_screen.dart';
@@ -60,7 +58,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => DualScreenCubit(),
+      create: (context) => SecondaryScreenCubit(),
       child: const MaterialApp(
         onGenerateRoute: generateRoute,
         initialRoute: '/',
@@ -98,7 +96,7 @@ class DisplayManagerScreen extends StatefulWidget {
 }
 
 class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
-  late final DualScreenCubit dualSrv = context.read<DualScreenCubit>();
+  late final SecondaryScreenCubit dualSrv = context.read<SecondaryScreenCubit>();
   DisplayManager displayManager = DisplayManager();
   List<Display?> displays = [];
 
@@ -108,7 +106,7 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
 
   @override
   void initState() {
-    context.read<DualScreenCubit>().init(autoShow: true, defaultRouterName: 'presentation');
+    context.read<SecondaryScreenCubit>().init(autoShow: true, defaultRouterName: 'presentation');
     displayManager.connectedDisplaysChangedStream?.listen(
       (event) {},
     );
@@ -121,9 +119,9 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
       appBar: AppBar(
         title: const Text('Plugin example app'),
       ),
-      floatingActionButton: BlocBuilder<DualScreenCubit, DualScreenState>(
+      floatingActionButton: BlocBuilder<SecondaryScreenCubit, SecondaryScreenState>(
         builder: (context, state) {
-          final isConnected = state.status == DualScreenServiceState.connected;
+          final isConnected = state.status == SecondaryScreenServiceState.connected;
           return FloatingActionButton(
             onPressed: isConnected
                 ? () async {
@@ -139,9 +137,9 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            BlocBuilder<DualScreenCubit, DualScreenState>(
+            BlocBuilder<SecondaryScreenCubit, SecondaryScreenState>(
               builder: (context, state) {
-                return Row(
+                return Wrap(
                   children: [
                     _getDisplays(),
                     Card(
@@ -255,7 +253,7 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
     final todo = TodoItem(id: _todoList.length + 1, taskName: data);
     _todoList.add(todo);
 
-    final cubit = context.read<DualScreenCubit>();
+    final cubit = context.read<SecondaryScreenCubit>();
     final request = TransferDataModel(
       eventName: 'add_todo',
       data: todo.toJson(),
@@ -277,7 +275,7 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
         ..removeAt(index)
         ..insert(index, element);
     });
-    final cubit = context.read<DualScreenCubit>();
+    final cubit = context.read<SecondaryScreenCubit>();
     final request = TransferDataModel(
       eventName: 'update_todo',
       data: _todoList[index].toJson(),
