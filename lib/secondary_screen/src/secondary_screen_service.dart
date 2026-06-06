@@ -2,19 +2,18 @@
 import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:presentation_displays/display.dart';
-import 'package:presentation_displays/displays_manager.dart';
+import '../secondary_screen.dart';
 
-part 'dual_screen_state.dart';
+part 'secondary_screen_state.dart';
 
-class DualScreenCubit extends Cubit<DualScreenState> {
+class SecondaryScreenCubit extends Cubit<SecondaryScreenState> {
   final DisplayManager _displayManager = DisplayManager();
 
-  static DualScreenCubit get instance => _instance;
-  static final DualScreenCubit _instance = DualScreenCubit._internal();
-  factory DualScreenCubit() => _instance;
+  static SecondaryScreenCubit get instance => _instance;
+  static final SecondaryScreenCubit _instance = SecondaryScreenCubit._internal();
+  factory SecondaryScreenCubit() => _instance;
 
-  DualScreenCubit._internal() : super(const DualScreenState());
+  SecondaryScreenCubit._internal() : super(const SecondaryScreenState());
 
   Future<void> init({bool autoShow = true, String defaultRouterName = 'presentation'}) async {
     emit(state.copyWith(isLoading: true, error: null));
@@ -26,11 +25,11 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         emit(state.copyWith(
           currentSecondaryDisplay: defaultSecondaryDisplay,
           availableDisplays: displays,
-          status: DualScreenServiceState.connected
+          status: SecondaryScreenServiceState.connected
         ));
       }
       if (autoShow && defaultSecondaryDisplay != null) {
-        emit(state.copyWith(currentRoute: null));
+        emit(state.copyWith(currentRoute: null, isShowing: false));
         await showOnSecondary(defaultRouterName);
       }
     } catch (e) {
@@ -53,7 +52,8 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         return false;
       }
 
-      if (state.currentRoute != routeName) {
+      // Re-show when not currently showing OR when switching to a different route
+      if (!state.isShowing || state.currentRoute != routeName) {
         await _displayManager.showSecondaryDisplay(
           displayId: state.currentSecondaryDisplay!.displayId!,
           routerName: routeName,
@@ -68,6 +68,8 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         isLoading: false,
         currentRoute: routeName,
         currentData: json,
+        isShowing: true,
+        status: SecondaryScreenServiceState.connected,
       ));
 
       return true;
@@ -88,9 +90,10 @@ class DualScreenCubit extends Cubit<DualScreenState> {
 
       emit(state.copyWith(
         isLoading: false,
-        currentRoute: null,
+        // Keep currentRoute so reConnectCurrentRoute can restore the last screen
         currentData: clearData ? null : state.currentData,
-        status: DualScreenServiceState.disconnected,
+        isShowing: false,
+        status: SecondaryScreenServiceState.disconnected,
       ));
       return true;
     } catch (e) {
@@ -102,10 +105,6 @@ class DualScreenCubit extends Cubit<DualScreenState> {
   Future reConnectCurrentRoute() async {
     if (state.currentRoute != null) {
       await showOnSecondary(state.currentRoute!);
-
-      emit(state.copyWith(
-        status: DualScreenServiceState.connected,
-      ));
     }
     return false;
   }
@@ -123,7 +122,8 @@ class DualScreenCubit extends Cubit<DualScreenState> {
         return false;
       }
 
-      await _displayManager.transferDataToPresentation(data);
+      final Map<String, dynamic> dataMap = jsonDecode(data);
+      await _displayManager.transferDataToPresentation(dataMap);
       emit(state.copyWith(currentData: data, isLoading: false));
       return true;
     } catch (e) {
@@ -135,26 +135,28 @@ class DualScreenCubit extends Cubit<DualScreenState> {
   Future<void> _handleReConnect() async {
     _displayManager.connectedDisplaysChangedStream?.listen((displayCount) async {
       if (displayCount == 0) {
+        // Hide before clearing the display reference
+        if (state.currentSecondaryDisplay != null) {
+          await _displayManager.hideSecondaryDisplay(
+              displayId: state.currentSecondaryDisplay!.displayId!);
+        }
         emit(state.copyWith(
           currentSecondaryDisplay: null,
-          status: DualScreenServiceState.disconnected,
+          isShowing: false,
+          status: SecondaryScreenServiceState.disconnected,
         ));
-        if (state.currentSecondaryDisplay != null) {
-          _displayManager.hideSecondaryDisplay(displayId: state.currentSecondaryDisplay!.displayId!);
-        }
         return;
       }
       final displays = await _displayManager.getDisplays();
-      final newDisplay = displays!.first;
+      final newDisplay = displays!.elementAtOrNull(1) ?? displays.first;
       emit(state.copyWith(
         availableDisplays: displays,
         currentSecondaryDisplay: newDisplay,
-        status: DualScreenServiceState.connected,
+        status: SecondaryScreenServiceState.connected,
       ));
       if (state.currentRoute != null) {
         showOnSecondary(state.currentRoute!);
       }
     });
   }
-
 }
