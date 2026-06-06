@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:secondary_screen/dual_screen_service/dual_screen_service.dart';
+import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
 
 void main() {
   group('TransferDataModel', () {
@@ -29,11 +29,11 @@ void main() {
     });
   });
 
-  group('DualScreenState', () {
+  group('SecondaryScreenState', () {
     test('initial state has correct defaults', () {
-      const state = DualScreenState();
+      const state = SecondaryScreenState();
 
-      expect(state.status, DualScreenServiceState.initial);
+      expect(state.status, SecondaryScreenServiceState.initial);
       expect(state.isLoading, false);
       expect(state.error, isNull);
       expect(state.currentRoute, isNull);
@@ -41,21 +41,21 @@ void main() {
     });
 
     test('copyWith updates only specified fields', () {
-      const state = DualScreenState();
+      const state = SecondaryScreenState();
 
       final updated = state.copyWith(
         isLoading: true,
-        status: DualScreenServiceState.connected,
+        status: SecondaryScreenServiceState.connected,
       );
 
       expect(updated.isLoading, true);
-      expect(updated.status, DualScreenServiceState.connected);
+      expect(updated.status, SecondaryScreenServiceState.connected);
       expect(updated.error, isNull);
       expect(updated.currentRoute, isNull);
     });
 
     test('defaultSecondaryDisplayId returns null when no display', () {
-      const state = DualScreenState();
+      const state = SecondaryScreenState();
       expect(state.defaultSecondaryDisplayId, isNull);
     });
   });
