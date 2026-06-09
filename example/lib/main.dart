@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
 
+import 'order_display_screen.dart';
 import 'promotion_screen.dart';
+import 'sales_screen.dart';
 import 'todo_screen.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
@@ -16,6 +18,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const PromotionScreen());
     case 'todo_list':
       return MaterialPageRoute(builder: (_) => const TodoScreen());
+    case 'sales':
+      return MaterialPageRoute(builder: (_) => const SalesScreen());
+    case 'order_display':
+      return MaterialPageRoute(builder: (_) => const OrderDisplayScreen());
     default:
       return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -61,7 +67,7 @@ class MyApp extends StatelessWidget {
       create: (context) => SecondaryScreenCubit(),
       child: const MaterialApp(
         onGenerateRoute: generateRoute,
-        initialRoute: '/',
+        initialRoute: 'sales',
       ),
     );
   }
