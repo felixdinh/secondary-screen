@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:presentation_displays/secondary_display.dart';
+import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
 
 import 'widgets/carousel_indicator.dart';
 
@@ -36,9 +36,7 @@ class _PromotionScreenState extends State<PromotionScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SecondaryDisplay(
-        callback: (args) {
-          debugPrint('display: $args');
-        },
+        callback: (args) {},
         child: Stack(
           fit: StackFit.expand,
           alignment: Alignment.center,
