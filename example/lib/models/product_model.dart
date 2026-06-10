@@ -12,14 +12,14 @@ class Product {
   });
 
   static const List<Product> catalog = [
-    Product(id: 1, name: 'Cà phê sữa', price: 35000, emoji: '☕'),
-    Product(id: 2, name: 'Bạc xỉu', price: 30000, emoji: '🥛'),
-    Product(id: 3, name: 'Trà sữa', price: 40000, emoji: '🧋'),
-    Product(id: 4, name: 'Sinh tố xoài', price: 45000, emoji: '🥭'),
-    Product(id: 5, name: 'Nước cam', price: 25000, emoji: '🍊'),
-    Product(id: 6, name: 'Cà phê đen', price: 25000, emoji: '🖤'),
-    Product(id: 7, name: 'Bánh mì', price: 20000, emoji: '🥖'),
-    Product(id: 8, name: 'Bánh croissant', price: 30000, emoji: '🥐'),
-    Product(id: 9, name: 'Matcha latte', price: 50000, emoji: '🍵'),
+    Product(id: 1, name: 'Milk Coffee', price: 35000, emoji: '☕'),
+    Product(id: 2, name: 'White Coffee', price: 30000, emoji: '🥛'),
+    Product(id: 3, name: 'Milk Tea', price: 40000, emoji: '🧋'),
+    Product(id: 4, name: 'Mango Smoothie', price: 45000, emoji: '🥭'),
+    Product(id: 5, name: 'Orange Juice', price: 25000, emoji: '🍊'),
+    Product(id: 6, name: 'Black Coffee', price: 25000, emoji: '🖤'),
+    Product(id: 7, name: 'Baguette', price: 20000, emoji: '🥖'),
+    Product(id: 8, name: 'Croissant', price: 30000, emoji: '🥐'),
+    Product(id: 9, name: 'Matcha Latte', price: 50000, emoji: '🍵'),
   ];
 }

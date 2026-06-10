@@ -77,7 +77,7 @@ class _SalesScreenState extends State<SalesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bán hàng'),
+        title: const Text('Point of Sale'),
         backgroundColor: const Color(0xFF16213E),
         foregroundColor: Colors.white,
       ),
@@ -98,7 +98,7 @@ class _SalesScreenState extends State<SalesScreen> {
         const Padding(
           padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Text(
-            'Thực đơn',
+            'Menu',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
@@ -136,14 +136,14 @@ class _SalesScreenState extends State<SalesScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Đơn hàng',
+                'Order',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               if (_orderItems.isNotEmpty)
                 TextButton(
                   onPressed: _checkout,
                   child: const Text(
-                    'Xóa tất cả',
+                    'Clear all',
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
@@ -154,7 +154,7 @@ class _SalesScreenState extends State<SalesScreen> {
           child: _orderItems.isEmpty
               ? const Center(
                   child: Text(
-                    'Chưa có sản phẩm',
+                    'No products added',
                     style: TextStyle(color: Colors.grey),
                   ),
                 )
@@ -204,7 +204,7 @@ class _SalesScreenState extends State<SalesScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Tổng cộng:',
+                'Total:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -231,7 +231,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 disabledBackgroundColor: Colors.grey[300],
               ),
               child: const Text(
-                'Thanh toán',
+                'Checkout',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -263,8 +263,8 @@ class _SalesScreenState extends State<SalesScreen> {
               const SizedBox(width: 8),
               Text(
                 isConnected
-                    ? 'Màn hình phụ: Đã kết nối'
-                    : 'Màn hình phụ: Chưa kết nối',
+                    ? 'Secondary display: Connected'
+                    : 'Secondary display: Disconnected',
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -278,10 +278,10 @@ class _SalesScreenState extends State<SalesScreen> {
     final s = price.toString();
     final buf = StringBuffer();
     for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
       buf.write(s[i]);
     }
-    return '${buf.toString()} đ';
+    return '${buf.toString()} VND';
   }
 }
 
@@ -320,7 +320,7 @@ class _ProductCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '${product.price ~/ 1000}k',
+                '${product.price ~/ 1000}K VND',
                 style: TextStyle(fontSize: 12, color: Colors.green[700]),
               ),
             ],

@@ -61,7 +61,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '☕ Quán Cà Phê Góc Phố',
+            '☕ Corner Coffee Shop',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -70,7 +70,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
           ),
           SizedBox(height: 4),
           Text(
-            'Cảm ơn bạn đã ghé thăm!',
+            'Thank you for visiting!',
             style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
         ],
@@ -82,7 +82,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
     if (_items.isEmpty) {
       return const Center(
         child: Text(
-          'Chào mừng quý khách!',
+          'Welcome!',
           style: TextStyle(fontSize: 32, color: Colors.white54),
         ),
       );
@@ -97,7 +97,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
               Expanded(
                 flex: 4,
                 child: Text(
-                  'SẢN PHẨM',
+                  'PRODUCT',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white54,
@@ -108,7 +108,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  'SL × GIÁ',
+                  'QTY × PRICE',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -120,7 +120,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  'THÀNH TIỀN',
+                  'SUBTOTAL',
                   textAlign: TextAlign.right,
                   style: TextStyle(
                     fontSize: 13,
@@ -198,7 +198,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            'TỔNG CỘNG',
+            'TOTAL',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -222,9 +222,9 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
     final s = price.toString();
     final buf = StringBuffer();
     for (int i = 0; i < s.length; i++) {
-      if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
       buf.write(s[i]);
     }
-    return '${buf.toString()} đ';
+    return '${buf.toString()} VND';
   }
 }
