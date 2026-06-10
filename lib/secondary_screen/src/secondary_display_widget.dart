@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 typedef ArgumentsCallback = Function(dynamic arguments);
 
 class SecondaryDisplay extends StatefulWidget {
-  const SecondaryDisplay({super.key, required this.callback, required this.child});
+  const SecondaryDisplay(
+      {super.key, required this.callback, required this.child});
 
   final ArgumentsCallback callback;
   final Widget child;
@@ -24,6 +25,13 @@ class _SecondaryDisplayState extends State<SecondaryDisplay> {
     _presentationMethodChannel?.setMethodCallHandler((call) async {
       widget.callback(call.arguments);
     });
+    _presentationMethodChannel?.invokeMethod<void>('SecondaryDisplayReady');
+  }
+
+  @override
+  void dispose() {
+    _presentationMethodChannel?.setMethodCallHandler(null);
+    super.dispose();
   }
 
   @override

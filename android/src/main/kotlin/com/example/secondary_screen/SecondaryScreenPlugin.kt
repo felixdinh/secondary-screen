@@ -9,7 +9,6 @@ import android.view.Display
 import com.google.gson.Gson
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -24,8 +23,12 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
     private lateinit var channel: MethodChannel
     private lateinit var eventChannel: EventChannel
     private var flutterEngineChannel: MethodChannel? = null
+    private var flutterEngine: FlutterEngine? = null
     private var context: Context? = null
     private var presentation: PresentationDisplay? = null
+    private var presentationDisplayId: Int? = null
+    private var secondaryDisplayReady = false
+    private var pendingData: Any? = null
 
     companion object {
         private const val methodChannelId = "presentation_displays_plugin"
@@ -59,20 +62,26 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
                     val routerName = obj.getString("routerName")
                     val display = displayManager?.getDisplay(displayId)
                     if (display != null) {
-                        val flutterEngine = createFlutterEngine(routerName)
-                        if (flutterEngine != null) {
-                            flutterEngineChannel = MethodChannel(
-                                flutterEngine.dartExecutor.binaryMessenger, engineChannelId
-                            )
-                            // Dismiss any existing presentation before showing a new one.
-                            // Android does not allow two Presentations on the same display simultaneously.
-                            presentation?.dismiss()
-                            presentation = context?.let { PresentationDisplay(it, routerName, display) }
-                            presentation?.show()
-                            result.success(true)
-                        } else {
-                            result.error("404", "Can't find FlutterEngine", null)
+                        val existingEngine = flutterEngine
+                        val engine = existingEngine ?: createFlutterEngine(routerName)
+                        if (engine == null) {
+                            result.error("404", "Can't create FlutterEngine", null)
+                            return
                         }
+
+                        secondaryDisplayReady = false
+                        if (presentation != null && presentationDisplayId == displayId) {
+                            engine.navigationChannel.pushRoute(routerName)
+                        } else {
+                            if (existingEngine != null) {
+                                engine.navigationChannel.pushRoute(routerName)
+                            }
+                            presentation?.dismiss()
+                            presentation = context?.let { PresentationDisplay(it, engine, display) }
+                            presentationDisplayId = displayId
+                            presentation?.show()
+                        }
+                        result.success(true)
                     } else {
                         result.error("404", "No display with id $displayId", null)
                     }
@@ -84,6 +93,8 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
                 try {
                     presentation?.dismiss()
                     presentation = null
+                    presentationDisplayId = null
+                    secondaryDisplayReady = false
                     result.success(true)
                 } catch (e: Exception) {
                     result.error(call.method, e.message, null)
@@ -99,7 +110,11 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
             }
             "transferDataToPresentation" -> {
                 try {
-                    flutterEngineChannel?.invokeMethod("DataTransfer", call.arguments)
+                    if (secondaryDisplayReady) {
+                        flutterEngineChannel?.invokeMethod("DataTransfer", call.arguments)
+                    } else {
+                        pendingData = call.arguments
+                    }
                     result.success(true)
                 } catch (e: Exception) {
                     result.success(false)
@@ -111,17 +126,32 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
 
     private fun createFlutterEngine(tag: String): FlutterEngine? {
         val ctx = context ?: return null
-        if (FlutterEngineCache.getInstance().get(tag) == null) {
-            val engine = FlutterEngine(ctx)
-            engine.navigationChannel.setInitialRoute(tag)
-            FlutterInjector.instance().flutterLoader().startInitialization(ctx)
-            val path = FlutterInjector.instance().flutterLoader().findAppBundlePath()
-            val entrypoint = DartExecutor.DartEntrypoint(path, "secondaryDisplayMain")
-            engine.dartExecutor.executeDartEntrypoint(entrypoint)
-            engine.lifecycleChannel.appIsResumed()
-            FlutterEngineCache.getInstance().put(tag, engine)
+        val engine = FlutterEngine(ctx)
+        engine.navigationChannel.setInitialRoute(tag)
+        FlutterInjector.instance().flutterLoader().startInitialization(ctx)
+        val path = FlutterInjector.instance().flutterLoader().findAppBundlePath()
+        val entrypoint = DartExecutor.DartEntrypoint(path, "secondaryDisplayMain")
+        engine.dartExecutor.executeDartEntrypoint(entrypoint)
+        engine.lifecycleChannel.appIsResumed()
+
+        flutterEngineChannel = MethodChannel(
+            engine.dartExecutor.binaryMessenger, engineChannelId
+        ).also { engineChannel ->
+            engineChannel.setMethodCallHandler { call, result ->
+                if (call.method == "SecondaryDisplayReady") {
+                    secondaryDisplayReady = true
+                    pendingData?.let { data ->
+                        engineChannel.invokeMethod("DataTransfer", data)
+                        pendingData = null
+                    }
+                    result.success(true)
+                } else {
+                    result.notImplemented()
+                }
+            }
         }
-        return FlutterEngineCache.getInstance().get(tag)
+        flutterEngine = engine
+        return engine
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
