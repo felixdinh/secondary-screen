@@ -1,4 +1,4 @@
-part of 'secondary_screen_service.dart';
+part of 'secondary_screen_cubit.dart';
 
 enum SecondaryScreenServiceState {
   initial,

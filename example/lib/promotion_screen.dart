@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
+import 'package:secondary_screen/secondary_screen.dart';
 
 import 'widgets/carousel_indicator.dart';
 

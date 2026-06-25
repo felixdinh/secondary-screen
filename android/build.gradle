@@ -1,4 +1,4 @@
-group 'com.example.secondary_screen'
+group 'com.felixdinh.secondary_screen'
 version '1.0'
 
 buildscript {
@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    namespace 'com.example.secondary_screen'
+    namespace 'com.felixdinh.secondary_screen'
     compileSdkVersion 34
 
     sourceSets {

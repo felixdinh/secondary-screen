@@ -1,4 +1,4 @@
-package com.example.secondary_screen
+package com.felixdinh.secondary_screen
 
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName

@@ -15,7 +15,7 @@ class SecondaryDisplay extends StatefulWidget {
 }
 
 class _SecondaryDisplayState extends State<SecondaryDisplay> {
-  static const _presentationChannel = "presentation_displays_plugin_engine";
+  static const _presentationChannel = "secondary_screen_engine";
   MethodChannel? _presentationMethodChannel;
 
   @override

@@ -1,4 +1,4 @@
-package com.example.secondary_screen
+package com.felixdinh.secondary_screen
 
 import android.app.Presentation
 import android.content.Context
