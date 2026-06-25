@@ -1,4 +1,4 @@
-package com.example.secondary_screen
+package com.felixdinh.secondary_screen
 
 import android.content.Context
 import android.hardware.display.DisplayManager
@@ -31,9 +31,9 @@ class SecondaryScreenPlugin : FlutterPlugin, ActivityAware, MethodChannel.Method
     private var pendingData: Any? = null
 
     companion object {
-        private const val methodChannelId = "presentation_displays_plugin"
-        private const val eventChannelId = "presentation_displays_plugin_events"
-        private const val engineChannelId = "presentation_displays_plugin_engine"
+        private const val methodChannelId = "secondary_screen"
+        private const val eventChannelId = "secondary_screen_events"
+        private const val engineChannelId = "secondary_screen_engine"
         private var displayManager: DisplayManager? = null
     }
 

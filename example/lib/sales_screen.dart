@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
+import 'package:secondary_screen/secondary_screen.dart';
 
 import 'models/order_item_model.dart';
 import 'models/product_model.dart';

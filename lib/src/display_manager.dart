@@ -9,8 +9,8 @@ const String displayCategoryPresentation =
     "android.hardware.display.category.PRESENTATION";
 
 class DisplayManager {
-  static const _displayMethodChannelId = "presentation_displays_plugin";
-  static const _displayEventChannelId = "presentation_displays_plugin_events";
+  static const _displayMethodChannelId = "secondary_screen";
+  static const _displayEventChannelId = "secondary_screen_events";
 
   final MethodChannel _displayMethodChannel =
       const MethodChannel(_displayMethodChannelId);

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
+import 'package:secondary_screen/secondary_screen.dart';
 
 import 'order_display_screen.dart';
 import 'promotion_screen.dart';
@@ -102,7 +102,7 @@ class DisplayManagerScreen extends StatefulWidget {
 }
 
 class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
-  late final SecondaryScreenCubit dualSrv = context.read<SecondaryScreenCubit>();
+  late final SecondaryScreenCubit secondaryScreen = context.read<SecondaryScreenCubit>();
   DisplayManager displayManager = DisplayManager();
   List<Display?> displays = [];
 
@@ -131,9 +131,9 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
           return FloatingActionButton(
             onPressed: isConnected
                 ? () async {
-                    await dualSrv.hideOnSecondary(clearData: true);
+                    await secondaryScreen.hideOnSecondary(clearData: true);
                   }
-                : dualSrv.reConnectCurrentRoute,
+                : secondaryScreen.reConnectCurrentRoute,
             child: Icon(Icons.power_settings_new,
                 color: isConnected ? Colors.red : Colors.green),
           );
@@ -203,7 +203,7 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
           ),
         ),
         Button(title: "Connect Secondary Display", onPressed: () async {
-          await dualSrv.init(autoShow: true);
+          await secondaryScreen.init(autoShow: true);
         }),
       ],
     );

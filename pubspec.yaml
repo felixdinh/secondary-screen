@@ -1,6 +1,6 @@
 name: secondary_screen
 description: "A Flutter package for managing dual/secondary screen displays with BLoC state management, supporting data transfer and route control."
-version: 1.0.1
+version: 2.0.0
 homepage: https://github.com/felixdinh/secondary-screen
 repository: https://github.com/felixdinh/secondary-screen
 
@@ -24,5 +24,5 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.secondary_screen
+        package: com.felixdinh.secondary_screen
         pluginClass: SecondaryScreenPlugin

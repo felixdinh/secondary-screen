@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:secondary_screen/secondary_screen/secondary_screen.dart';
+import 'package:secondary_screen/secondary_screen.dart';
 
 import 'models/order_item_model.dart';
 
