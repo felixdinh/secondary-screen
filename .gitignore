@@ -264,3 +264,12 @@ out/
 # Sentry
 **/ios/sentry.properties
 **/android/sentry.properties
+
+# AI coding assistants (local editor/agent config — do not commit)
+.claude/
+.agent/
+.codex/
+.cursor/
+AGENTS.md
+CLAUDE.md
+.cursorrules
