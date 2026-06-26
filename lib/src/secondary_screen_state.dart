@@ -1,4 +1,4 @@
-part of 'secondary_screen_cubit.dart';
+import 'display.dart';
 
 enum SecondaryScreenServiceState {
   initial,
@@ -45,12 +45,10 @@ class SecondaryScreenState {
       currentSecondaryDisplay: currentSecondaryDisplay == _unset
           ? this.currentSecondaryDisplay
           : currentSecondaryDisplay as Display?,
-      currentRoute: currentRoute == _unset
-          ? this.currentRoute
-          : currentRoute as String?,
-      currentData: currentData == _unset
-          ? this.currentData
-          : currentData as String?,
+      currentRoute:
+          currentRoute == _unset ? this.currentRoute : currentRoute as String?,
+      currentData:
+          currentData == _unset ? this.currentData : currentData as String?,
       isLoading: isLoading ?? this.isLoading,
       error: error == _unset ? this.error : error as String?,
       availableDisplays: availableDisplays == _unset

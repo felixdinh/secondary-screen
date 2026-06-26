@@ -5,7 +5,7 @@
 [![platform](https://img.shields.io/badge/platform-android-success.svg)](https://pub.dev/packages/secondary_screen)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Drive a **dual / secondary screen** from Flutter with BLoC state management — show named routes on the second display, push live data to it, and auto-reconnect when a display is plugged or unplugged. Ideal for **Point of Sale (POS)** setups where the customer sees a live order summary or promotions.
+Drive a **dual / secondary screen** from Flutter with a state-manager-agnostic service API — show named routes on the second display, push live data to it, and auto-reconnect when a display is plugged or unplugged. Ideal for **Point of Sale (POS)** setups where the customer sees a live order summary or promotions.
 
 ![POS demo](https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/demo.gif)
 
@@ -23,7 +23,10 @@ Drive a **dual / secondary screen** from Flutter with BLoC state management — 
 - **Live data transfer** — push structured, event-based payloads (`TransferDataModel`) to the second screen in real time.
 - **Receive widget** — `SecondaryDisplay` delivers incoming data to your secondary UI.
 - **Auto-reconnect** — restores the last route when a display is plugged/unplugged.
-- **Single entry point** — a singleton `SecondaryScreenCubit` any layer can call.
+- **One wrapper setup** — `SecondaryScreenScope` initializes the service and exposes a controller from context.
+- **Convenience controller** — call `show`, `send`, `showEvent`, `sendEvent`, `hide`, and `reconnect` without manual JSON encoding.
+- **State-manager agnostic** — use the singleton `SecondaryScreenService`, its `ValueListenable`, or bridge the service into Provider, Riverpod, BLoC, GetX, or your own state layer.
+- **UI listener widgets** — `SecondaryScreenBuilder` and `SecondaryScreenListener` rebuild or react to service state without requiring BLoC.
 - **Low-level access** — `DisplayManager` to enumerate displays directly when you need it.
 
 ## 📦 Installation
@@ -32,7 +35,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  secondary_screen: ^2.0.0
+  secondary_screen: ^2.1.0
 ```
 
 Then import it:
@@ -86,41 +89,127 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
 ## 🛠️ Usage
 
-**Initialize** — wrap your app with a `BlocProvider` and call `init` (e.g. in `initState`):
+**Wrap your primary app** — `SecondaryScreenScope` initializes the service, optionally shows your default secondary route, and exposes a controller to every descendant:
 
 ```dart
-BlocProvider(
-  create: (_) => SecondaryScreenCubit(),
-  child: const MaterialApp(onGenerateRoute: generateRoute, initialRoute: 'sales'),
-)
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-context.read<SecondaryScreenCubit>().init(
-  autoShow: true,
-  defaultRouterName: 'presentation',
+  @override
+  Widget build(BuildContext context) {
+    return const SecondaryScreenScope(
+      autoShow: true,
+      defaultRouteName: 'presentation',
+      child: MaterialApp(
+        onGenerateRoute: generateRoute,
+        initialRoute: 'sales',
+      ),
+    );
+  }
+}
+```
+
+**Use the controller anywhere below the wrapper** — no `jsonEncode` needed:
+
+```dart
+final screen = SecondaryScreenScope.of(context);
+
+await screen.showEvent(
+  'order_display',
+  eventName: 'update_order',
+  data: {'items': items, 'total': 42000},
+);
+
+await screen.sendEvent(
+  eventName: 'update_order',
+  data: {'items': updatedItems, 'total': 50000},
 );
 ```
 
-`SecondaryScreenCubit` is a singleton — reach it anywhere via `SecondaryScreenCubit.instance`.
-
-**Show a route & push data** — build the payload with `TransferDataModel`; the `eventName` tells the receiver what to do:
+For custom payload models, pass `TransferDataModel` or a JSON object `Map` directly:
 
 ```dart
 final payload = TransferDataModel(
   eventName: 'update_order',
-  data: {'items': [...], 'total': 42000},
+  data: {'items': items, 'total': 42000},
 );
 
-// Navigate the second screen and send the first payload:
-await SecondaryScreenCubit.instance.showOnSecondary(
-  'order_display',
-  json: jsonEncode(payload.toJson()),
-);
-
-// Later, refresh data without re-navigating:
-await SecondaryScreenCubit.instance.updateDataOnSecondary(jsonEncode(payload.toJson()));
+await screen.show('order_display', data: payload);
+await screen.send(payload);
 ```
 
-> `showOnSecondary` only re-navigates when the screen isn't already showing or the route changes — otherwise it just transfers data, so it's safe to call repeatedly.
+**Read state from the same wrapper**:
+
+```dart
+SecondaryScreenScope(
+  builder: (context, screen, state, child) {
+    final isConnected = state.status == SecondaryScreenServiceState.connected;
+    return Column(
+      children: [
+        Text(isConnected ? 'Connected' : 'Disconnected'),
+        Expanded(child: child!),
+      ],
+    );
+  },
+  child: const SalesScreen(),
+)
+```
+
+Use `onError` or `onStateChanged` when the wrapper should handle side effects for you:
+
+```dart
+SecondaryScreenScope(
+  onError: (context, error, state) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error)),
+    );
+  },
+  child: const MyPrimaryScreen(),
+)
+```
+
+You can still use the lower-level singleton service when you do not want a widget wrapper:
+
+```dart
+await SecondaryScreenService.instance.init(
+  autoShow: true,
+  defaultRouterName: 'presentation',
+);
+await SecondaryScreenService.instance.showOnSecondary(
+  'order_display',
+  json: jsonEncode({
+    'event_name': 'update_order',
+    'data': {'items': items, 'total': 42000},
+  }),
+);
+```
+
+**Listen from Flutter UI** — use `SecondaryScreenBuilder` for a focused rebuild when you do not need the full scope wrapper:
+
+```dart
+SecondaryScreenBuilder(
+  builder: (context, state, child) {
+    final isConnected = state.status == SecondaryScreenServiceState.connected;
+    return Text(isConnected ? 'Connected' : 'Disconnected');
+  },
+)
+```
+
+Use `SecondaryScreenListener` for focused side effects:
+
+```dart
+SecondaryScreenListener(
+  listenWhen: (previous, current) => previous.error != current.error,
+  listener: (context, state) {
+    if (state.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(state.error!)),
+      );
+    }
+  },
+  child: const MyPrimaryScreen(),
+)
+```
 
 **Receive data on the secondary screen** — wrap the route's UI in `SecondaryDisplay` and handle payloads in its `callback`:
 
@@ -141,17 +230,48 @@ SecondaryDisplay(
 **Hide & reconnect:**
 
 ```dart
-await SecondaryScreenCubit.instance.hideOnSecondary(clearData: true);
-await SecondaryScreenCubit.instance.reConnectCurrentRoute(); // restores the last route
+final screen = SecondaryScreenScope.of(context);
+await screen.hide(clearData: true);
+await screen.reconnect(); // restores the last route
 ```
+
+> `show` only re-navigates when the screen isn't already showing or the route changes — otherwise it just transfers data, so it's safe to call repeatedly.
 
 > 💡 For a full, runnable Point-of-Sale demo (sales, order display, promotion carousel, and an event-based todo screen), see the [`example/`](example/) directory.
 
 ## 📖 API reference
 
-### `SecondaryScreenCubit`
+### `SecondaryScreenScope`
 
-A singleton `Cubit<SecondaryScreenState>`.
+One-widget primary-side setup. It can auto-initialize the secondary display, auto-show a default route, provide state to a builder, and expose `SecondaryScreenController` through `SecondaryScreenScope.of(context)`.
+
+| Option             | Type                              | Description                                           |
+| ------------------ | --------------------------------- | ----------------------------------------------------- |
+| `autoInit`         | `bool`                            | Calls `init` automatically when the widget mounts     |
+| `autoShow`         | `bool`                            | Shows `defaultRouteName` after a display is detected  |
+| `defaultRouteName` | `String`                          | Initial secondary route, defaults to `presentation`   |
+| `builder`          | `SecondaryScreenScopeBuilder?`    | Rebuild from controller + current state               |
+| `onStateChanged`   | `SecondaryScreenStateListener?`   | Side effect for state changes                         |
+| `onError`          | `SecondaryScreenErrorListener?`   | Side effect for new error messages                    |
+| `listenWhen`       | `SecondaryScreenListenWhen?`      | Filters `onStateChanged` calls                        |
+
+### `SecondaryScreenController`
+
+High-level controller exposed by `SecondaryScreenScope.of(context)` and `SecondaryScreenController.instance`.
+
+| Method                                 | Returns        | Description                                            |
+| -------------------------------------- | -------------- | ------------------------------------------------------ |
+| `init({autoShow, defaultRouteName})`   | `Future<void>` | Detect displays and optionally show a default route    |
+| `show(routeName, {data})`              | `Future<bool>` | Navigate and optionally send `String`, `Map`, or `TransferDataModel` |
+| `send(data)`                           | `Future<bool>` | Send `String`, `Map`, or `TransferDataModel` without route changes |
+| `showEvent(routeName, {eventName, data})` | `Future<bool>` | Build and send `TransferDataModel` while navigating |
+| `sendEvent({eventName, data})`         | `Future<bool>` | Build and send `TransferDataModel` without navigation  |
+| `hide({clearData = false})`            | `Future<bool>` | Hide the secondary display                             |
+| `reconnect()`                          | `Future<bool>` | Restore the last route                                 |
+
+### `SecondaryScreenService`
+
+A lower-level singleton service that implements `ValueListenable<SecondaryScreenState>` and exposes a broadcast `stateChanges` stream. Use it directly when you want to bridge into another state-management library.
 
 | Method                                       | Returns        | Description                                                       |
 | -------------------------------------------- | -------------- | ---------------------------------------------------------------- |
@@ -159,7 +279,21 @@ A singleton `Cubit<SecondaryScreenState>`.
 | `showOnSecondary(routeName, {json})`         | `Future<bool>` | Navigate to a route (deduped) and optionally send a JSON payload  |
 | `updateDataOnSecondary(data)`                | `Future<bool>` | Push a new JSON payload without changing the route                |
 | `hideOnSecondary({clearData = false})`       | `Future<bool>` | Hide the secondary display; keeps the last route for reconnecting |
-| `reConnectCurrentRoute()`                    | `Future`       | Re-show the last active route after a reconnect                   |
+| `reConnectCurrentRoute()`                    | `Future<bool>` | Re-show the last active route after a reconnect                   |
+
+| State access     | Type                                   | Description                                  |
+| ---------------- | -------------------------------------- | -------------------------------------------- |
+| `state`          | `SecondaryScreenState`                 | Current immutable state snapshot             |
+| `listenable`     | `ValueListenable<SecondaryScreenState>` | Rebuild Flutter UI with `ValueListenableBuilder` |
+| `stateChanges`   | `Stream<SecondaryScreenState>`         | Bridge state updates into another state layer |
+
+### `SecondaryScreenBuilder`
+
+`SecondaryScreenBuilder({service, builder, child})` — rebuilds when `SecondaryScreenService` emits a new state. The `service` argument is optional and defaults to `SecondaryScreenService.instance`.
+
+### `SecondaryScreenListener`
+
+`SecondaryScreenListener({service, listenWhen, listener, child})` — runs side effects when service state changes. Use `listenWhen` to filter transitions, such as only reacting when `error` changes.
 
 ### `SecondaryScreenState`
 

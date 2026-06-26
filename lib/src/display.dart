@@ -22,5 +22,6 @@ class Display {
   int? rotation;
   String? name;
 
-  Display({required this.displayId, this.flag, required this.name, this.rotation});
+  Display(
+      {required this.displayId, this.flag, required this.name, this.rotation});
 }

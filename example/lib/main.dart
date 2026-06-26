@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:secondary_screen/secondary_screen.dart';
 
 import 'order_display_screen.dart';
@@ -63,9 +60,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => SecondaryScreenCubit(),
-      child: const MaterialApp(
+    return const SecondaryScreenScope(
+      autoShow: true,
+      defaultRouteName: 'presentation',
+      child: MaterialApp(
         onGenerateRoute: generateRoute,
         initialRoute: 'sales',
       ),
@@ -102,17 +100,20 @@ class DisplayManagerScreen extends StatefulWidget {
 }
 
 class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
-  late final SecondaryScreenCubit secondaryScreen = context.read<SecondaryScreenCubit>();
   DisplayManager displayManager = DisplayManager();
   List<Display?> displays = [];
 
-  final TextEditingController _dataToTransferController = TextEditingController();
-  final TextEditingController _secondaryDisplayIdController = TextEditingController();
+  final TextEditingController _dataToTransferController =
+      TextEditingController();
+  final TextEditingController _secondaryDisplayIdController =
+      TextEditingController();
   final List<TodoItem> _todoList = [];
+
+  SecondaryScreenController get secondaryScreen =>
+      SecondaryScreenScope.of(context);
 
   @override
   void initState() {
-    context.read<SecondaryScreenCubit>().init(autoShow: true, defaultRouterName: 'presentation');
     displayManager.connectedDisplaysChangedStream?.listen(
       (event) {},
     );
@@ -125,15 +126,16 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
       appBar: AppBar(
         title: const Text('Plugin example app'),
       ),
-      floatingActionButton: BlocBuilder<SecondaryScreenCubit, SecondaryScreenState>(
-        builder: (context, state) {
-          final isConnected = state.status == SecondaryScreenServiceState.connected;
+      floatingActionButton: SecondaryScreenBuilder(
+        builder: (context, state, child) {
+          final isConnected =
+              state.status == SecondaryScreenServiceState.connected;
           return FloatingActionButton(
             onPressed: isConnected
                 ? () async {
-                    await secondaryScreen.hideOnSecondary(clearData: true);
+                    await secondaryScreen.hide(clearData: true);
                   }
-                : secondaryScreen.reConnectCurrentRoute,
+                : secondaryScreen.reconnect,
             child: Icon(Icons.power_settings_new,
                 color: isConnected ? Colors.red : Colors.green),
           );
@@ -143,8 +145,8 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            BlocBuilder<SecondaryScreenCubit, SecondaryScreenState>(
-              builder: (context, state) {
+            SecondaryScreenBuilder(
+              builder: (context, state, child) {
                 return Wrap(
                   children: [
                     _getDisplays(),
@@ -157,7 +159,8 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
                           children: [
                             Text('Total displays: ${displays.length}'),
                             const SizedBox(height: 8),
-                            ...displays.map((d) => Text('ID: ${d?.displayId}, Name: ${d?.name}')),
+                            ...displays.map((d) =>
+                                Text('ID: ${d?.displayId}, Name: ${d?.name}')),
                           ],
                         ),
                       ),
@@ -169,11 +172,15 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Secondary Screen Status: ${state.status.name}'),
-                            Text('Current Display ID: ${state.defaultSecondaryDisplayId ?? 'None'}'),
-                            Text('Current Route: ${state.currentRoute ?? 'None'}'),
+                            Text(
+                                'Secondary Screen Status: ${state.status.name}'),
+                            Text(
+                                'Current Display ID: ${state.defaultSecondaryDisplayId ?? 'None'}'),
+                            Text(
+                                'Current Route: ${state.currentRoute ?? 'None'}'),
                             Text('Is Loading: ${state.isLoading}'),
-                            if (state.error != null) Text('Error: ${state.error}'),
+                            if (state.error != null)
+                              Text('Error: ${state.error}'),
                           ],
                         ),
                       ),
@@ -202,9 +209,11 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
             labelText: 'Enter secondary display ID',
           ),
         ),
-        Button(title: "Connect Secondary Display", onPressed: () async {
-          await secondaryScreen.init(autoShow: true);
-        }),
+        Button(
+            title: "Connect Secondary Display",
+            onPressed: () async {
+              await secondaryScreen.init(autoShow: true);
+            }),
       ],
     );
   }
@@ -259,14 +268,13 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
     final todo = TodoItem(id: _todoList.length + 1, taskName: data);
     _todoList.add(todo);
 
-    final cubit = context.read<SecondaryScreenCubit>();
     final request = TransferDataModel(
       eventName: 'add_todo',
       data: todo.toJson(),
     );
-    final success = await cubit.showOnSecondary(
+    final success = await secondaryScreen.show(
       'todo_list',
-      json: jsonEncode(request.toJson()),
+      data: request,
     );
     if (success) {
       setState(() {});
@@ -275,20 +283,20 @@ class _DisplayManagerScreenState extends State<DisplayManagerScreen> {
   }
 
   void _doneTask(int index) {
-    final element = _todoList[index].copyWith(isCompleted: !_todoList[index].isCompleted);
+    final element =
+        _todoList[index].copyWith(isCompleted: !_todoList[index].isCompleted);
     setState(() {
       _todoList
         ..removeAt(index)
         ..insert(index, element);
     });
-    final cubit = context.read<SecondaryScreenCubit>();
     final request = TransferDataModel(
       eventName: 'update_todo',
       data: _todoList[index].toJson(),
     );
-    cubit.showOnSecondary(
+    secondaryScreen.show(
       'todo_list',
-      json: jsonEncode(request.toJson()),
+      data: request,
     );
   }
 }

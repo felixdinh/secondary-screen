@@ -114,7 +114,8 @@ class TodoItem {
   final String taskName;
   final bool isCompleted;
 
-  TodoItem({required this.id, required this.taskName, this.isCompleted = false});
+  TodoItem(
+      {required this.id, required this.taskName, this.isCompleted = false});
 
   factory TodoItem.fromJson(Map<String, dynamic> json) {
     return TodoItem(
