@@ -253,11 +253,15 @@ class _SalesScreenState extends State<SalesScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                isConnected
-                    ? 'Secondary display: Connected'
-                    : 'Secondary display: Disconnected',
-                style: const TextStyle(fontSize: 12),
+              Expanded(
+                child: Text(
+                  isConnected
+                      ? 'Secondary display: Connected'
+                      : 'Secondary display: Disconnected',
+                  style: const TextStyle(fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

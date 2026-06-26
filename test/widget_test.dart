@@ -5,27 +5,44 @@ void main() {
   group('TransferDataModel', () {
     test('toJson serializes correctly', () {
       final model = TransferDataModel(
-        eventName: 'add_todo',
-        data: {'id': 1, 'taskName': 'Test task'},
+        eventName: 'update_order',
+        data: {
+          'items': [
+            {'name': 'Coffee', 'quantity': 1, 'subtotal': 25000},
+          ],
+          'total': 25000,
+        },
       );
 
       final json = model.toJson();
 
-      expect(json['event_name'], 'add_todo');
-      expect(json['data'], {'id': 1, 'taskName': 'Test task'});
+      expect(json['event_name'], 'update_order');
+      expect(json['data'], {
+        'items': [
+          {'name': 'Coffee', 'quantity': 1, 'subtotal': 25000},
+        ],
+        'total': 25000,
+      });
     });
 
     test('fromJson deserializes correctly', () {
       final json = {
-        'event_name': 'update_todo',
-        'data': {'id': 2, 'taskName': 'Another task', 'isCompleted': true},
+        'event_name': 'update_order',
+        'data': {
+          'items': [
+            {'name': 'Tea', 'quantity': 2, 'subtotal': 40000},
+          ],
+          'total': 40000,
+        },
       };
 
       final model = TransferDataModel.fromJson(json);
 
-      expect(model.eventName, 'update_todo');
-      expect(model.data['id'], 2);
-      expect(model.data['isCompleted'], true);
+      expect(model.eventName, 'update_order');
+      expect(model.data['total'], 40000);
+      expect(model.data['items'], [
+        {'name': 'Tea', 'quantity': 2, 'subtotal': 40000},
+      ]);
     });
   });
 

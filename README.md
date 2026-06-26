@@ -75,6 +75,9 @@ class MySecondApp extends StatelessWidget {
 ```dart
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
+    case '/':
+    case 'sales':
+      return MaterialPageRoute(builder: (_) => const SalesScreen());
     case 'presentation':
       return MaterialPageRoute(builder: (_) => const PromotionScreen());
     case 'order_display':
@@ -237,7 +240,7 @@ await screen.reconnect(); // restores the last route
 
 > `show` only re-navigates when the screen isn't already showing or the route changes — otherwise it just transfers data, so it's safe to call repeatedly.
 
-> 💡 For a full, runnable Point-of-Sale demo (sales, order display, promotion carousel, and an event-based todo screen), see the [`example/`](example/) directory.
+> 💡 For a full, runnable Point-of-Sale demo, see the [`example/`](example/) directory: `SalesScreen` runs on the primary display, while `PromotionScreen` and `OrderDisplayScreen` run on the secondary display.
 
 ## 📖 API reference
 
