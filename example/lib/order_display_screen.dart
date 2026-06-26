@@ -11,6 +11,7 @@ class OrderDisplayScreen extends StatefulWidget {
 }
 
 class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
+  final ScrollController _orderScrollController = ScrollController();
   List<OrderItem> _items = [];
   int _total = 0;
 
@@ -26,13 +27,34 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
       final dataMap = Map<String, dynamic>.from(data);
       final rawItems = dataMap['items'] as List?;
       if (rawItems == null) return;
+      final shouldScrollToBottom = rawItems.length > _items.length;
       setState(() {
         _items = rawItems
             .map((e) => OrderItem.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
         _total = (dataMap['total'] as num).toInt();
       });
+      if (shouldScrollToBottom) {
+        _scrollOrderToBottom();
+      }
     }
+  }
+
+  void _scrollOrderToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_orderScrollController.hasClients) return;
+      _orderScrollController.animateTo(
+        _orderScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _orderScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -95,7 +117,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
           child: Row(
             children: const [
               Expanded(
-                flex: 4,
+                flex: 5,
                 child: Text(
                   'PRODUCT',
                   style: TextStyle(
@@ -108,7 +130,19 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
               Expanded(
                 flex: 2,
                 child: Text(
-                  'QTY × PRICE',
+                  'PRICE',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white54,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'QTY',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -135,6 +169,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
         const Divider(color: Colors.white24, height: 1),
         Expanded(
           child: ListView.separated(
+            controller: _orderScrollController,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
             itemCount: _items.length,
             separatorBuilder: (_, __) =>
@@ -146,7 +181,7 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 4,
+                      flex: 5,
                       child: Text(
                         item.product.name,
                         style: const TextStyle(
@@ -154,12 +189,27 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
-                        '${item.quantity} × ${_fmt(item.product.price)}',
+                        _fmt(item.product.price),
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text(
+                        '${item.quantity}',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -177,6 +227,8 @@ class _OrderDisplayScreenState extends State<OrderDisplayScreen> {
                           color: Colors.amber,
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

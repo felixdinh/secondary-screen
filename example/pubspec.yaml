@@ -10,7 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_bloc: '>=8.1.3 <10.0.0'
   secondary_screen:
     path: ..
   carousel_slider: ^5.1.1

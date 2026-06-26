@@ -18,8 +18,8 @@ class DisplayManager {
       const EventChannel(_displayEventChannelId);
 
   Future<List<Display>?> getDisplays({String? category}) async {
-    final List<dynamic> origins = await jsonDecode(
-            (await _displayMethodChannel.invokeMethod('listDisplay', category))) ??
+    final List<dynamic> origins = await jsonDecode((await _displayMethodChannel
+            .invokeMethod('listDisplay', category))) ??
         [];
     return origins.map((element) {
       final map = jsonDecode(jsonEncode(element)) as Map<String, dynamic>;
@@ -43,8 +43,7 @@ class DisplayManager {
 
   Future<bool?> showSecondaryDisplay(
       {required int displayId, required String routerName}) async {
-    return _displayMethodChannel.invokeMethod<bool>(
-        'showPresentation',
+    return _displayMethodChannel.invokeMethod<bool>('showPresentation',
         '{"displayId": $displayId, "routerName": "$routerName"}');
   }
 

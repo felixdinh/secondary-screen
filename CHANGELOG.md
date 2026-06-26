@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.0
+
+> **Breaking:** `flutter_bloc` is no longer a dependency and
+> `SecondaryScreenCubit` has been removed. Use `SecondaryScreenScope` and
+> `SecondaryScreenController` instead.
+
+- Add `SecondaryScreenService`, a singleton service that owns secondary-display
+  state and implements `ValueListenable<SecondaryScreenState>`
+- Add `SecondaryScreenController`, a convenience controller with `show`, `send`,
+  `showEvent`, `sendEvent`, `hide`, and `reconnect`
+- Add `SecondaryScreenScope`, a primary-side wrapper widget that auto-initializes
+  the service and exposes the controller through context
+- Add `stateChanges` for integrating the service with any state-management layer
+- Add `SecondaryScreenBuilder` and `SecondaryScreenListener` for Flutter UI
+  rebuilds and side effects without requiring BLoC
+- Move `SecondaryScreenState` into a standalone exported model file
+- Update the example and README to use `SecondaryScreenScope` and
+  `SecondaryScreenController`
+- Remove the package and example dependency on `flutter_bloc`
+
 ## 2.0.0
 
 > **Breaking:** the import path changed. Update imports to

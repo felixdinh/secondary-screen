@@ -1,17 +1,21 @@
 # secondary_screen_example
 
-A new Flutter project.
+Point-of-Sale example for the `secondary_screen` package.
 
-## Getting Started
+## Screens
 
-This project is a starting point for a Flutter application.
+- `SalesScreen` is the cashier-facing primary screen.
+- `PromotionScreen` is the default customer-facing secondary screen.
+- `OrderDisplayScreen` is shown on the secondary screen when the order has items.
 
-A few resources to get you started if this is your first Flutter project:
+## Routes
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- `sales` and `/` -> `SalesScreen`
+- `presentation` -> `PromotionScreen`
+- `order_display` -> `OrderDisplayScreen`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run it on an Android device or emulator with a secondary display:
+
+```bash
+flutter run
+```

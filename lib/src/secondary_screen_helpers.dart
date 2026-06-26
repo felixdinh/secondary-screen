@@ -1,4 +1,5 @@
-import '../secondary_screen.dart';
+import 'display.dart';
+import 'secondary_screen_state.dart';
 
 class SecondaryScreenHelpers {
   const SecondaryScreenHelpers._();
@@ -11,20 +12,24 @@ class SecondaryScreenHelpers {
   }
 
   static SecondaryScreenState stateFromJson(Map<String, dynamic> json) {
-    final displayJson = json['currentSecondaryDisplay'] as Map<String, dynamic>?;
+    final displayJson =
+        json['currentSecondaryDisplay'] as Map<String, dynamic>?;
     return SecondaryScreenState(
       status: SecondaryScreenServiceState.values.byName(json['status']),
-      currentSecondaryDisplay: displayJson != null ? displayFromJson(displayJson) : null,
+      currentSecondaryDisplay:
+          displayJson != null ? displayFromJson(displayJson) : null,
     );
   }
 
   static Map<String, dynamic>? displayToJson(Display? display) {
-    return display != null ? {
-      'displayId': display.displayId,
-      'flag': display.flag,
-      'rotation': display.rotation,
-      'name': display.name,
-    } : null;
+    return display != null
+        ? {
+            'displayId': display.displayId,
+            'flag': display.flag,
+            'rotation': display.rotation,
+            'name': display.name,
+          }
+        : null;
   }
 
   static Display? displayFromJson(Map<String, dynamic> json) {

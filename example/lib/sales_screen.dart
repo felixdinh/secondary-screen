@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:secondary_screen/secondary_screen.dart';
 
 import 'models/order_item_model.dart';
@@ -16,25 +13,20 @@ class SalesScreen extends StatefulWidget {
 
 class _SalesScreenState extends State<SalesScreen> {
   final List<OrderItem> _orderItems = [];
-  late final SecondaryScreenCubit _cubit = context.read<SecondaryScreenCubit>();
 
-  @override
-  void initState() {
-    super.initState();
-    _cubit.init(autoShow: true, defaultRouterName: 'presentation');
-  }
+  SecondaryScreenController get _secondaryScreen =>
+      SecondaryScreenScope.of(context);
 
   int get _total => _orderItems.fold(0, (sum, item) => sum + item.subtotal);
 
-  String _buildOrderPayload() {
-    final payload = TransferDataModel(
+  TransferDataModel _buildOrderPayload() {
+    return TransferDataModel(
       eventName: 'update_order',
       data: {
         'items': _orderItems.map((e) => e.toJson()).toList(),
         'total': _total,
       },
     );
-    return jsonEncode(payload.toJson());
   }
 
   void _addProduct(Product product) {
@@ -52,9 +44,9 @@ class _SalesScreenState extends State<SalesScreen> {
 
     final payload = _buildOrderPayload();
     if (wasEmpty) {
-      _cubit.showOnSecondary('order_display', json: payload);
+      _secondaryScreen.show('order_display', data: payload);
     } else {
-      _cubit.updateDataOnSecondary(payload);
+      _secondaryScreen.send(payload);
     }
   }
 
@@ -62,15 +54,15 @@ class _SalesScreenState extends State<SalesScreen> {
     setState(() => _orderItems.removeAt(index));
 
     if (_orderItems.isEmpty) {
-      _cubit.showOnSecondary('presentation');
+      _secondaryScreen.show('presentation');
     } else {
-      _cubit.updateDataOnSecondary(_buildOrderPayload());
+      _secondaryScreen.send(_buildOrderPayload());
     }
   }
 
   void _checkout() {
     setState(() => _orderItems.clear());
-    _cubit.showOnSecondary('presentation');
+    _secondaryScreen.show('presentation');
   }
 
   @override
@@ -242,8 +234,8 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Widget _buildConnectionBadge() {
-    return BlocBuilder<SecondaryScreenCubit, SecondaryScreenState>(
-      builder: (context, state) {
+    return SecondaryScreenBuilder(
+      builder: (context, state, child) {
         final isConnected =
             state.status == SecondaryScreenServiceState.connected;
         return Container(
@@ -261,11 +253,15 @@ class _SalesScreenState extends State<SalesScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                isConnected
-                    ? 'Secondary display: Connected'
-                    : 'Secondary display: Disconnected',
-                style: const TextStyle(fontSize: 12),
+              Expanded(
+                child: Text(
+                  isConnected
+                      ? 'Secondary display: Connected'
+                      : 'Secondary display: Disconnected',
+                  style: const TextStyle(fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

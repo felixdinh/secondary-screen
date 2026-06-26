@@ -44,7 +44,8 @@ class _PromotionScreenState extends State<PromotionScreen> {
             CarouselSlider.builder(
               carouselController: _controller,
               itemCount: _imageUrls.length,
-              itemBuilder: (context, index, realIndex) => _buildImage(_imageUrls[index], index),
+              itemBuilder: (context, index, realIndex) =>
+                  _buildImage(_imageUrls[index], index),
               disableGesture: true,
               options: CarouselOptions(
                 autoPlay: true,
