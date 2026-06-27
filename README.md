@@ -7,13 +7,11 @@
 
 Drive a **dual / secondary screen** from Flutter with a state-manager-agnostic service API — show named routes on the second display, push live data to it, and auto-reconnect when a display is plugged or unplugged. Ideal for **Point of Sale (POS)** setups where the customer sees a live order summary or promotions.
 
-![POS demo](https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/demo.gif)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/demo.gif" alt="POS demo" width="100%" />
+</p>
 
 *The cashier's primary screen (left) drives the customer-facing secondary display (right) in real time.*
-
-<img src="https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/customer-display.jpg" alt="Customer-facing secondary display on a Zonerich POS terminal" width="480" />
-
-*Running on a real Zonerich dual-screen POS terminal — the customer-facing display.*
 
 > **Platform:** Android only. Built on the Android [Presentation API](https://developer.android.com/reference/android/app/Presentation) via [`presentation_displays`](https://pub.dev/packages/presentation_displays).
 
