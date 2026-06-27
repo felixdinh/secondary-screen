@@ -1,6 +1,6 @@
 name: secondary_screen
 description: "A Flutter package for managing Android dual/secondary screen displays with a state-manager-agnostic service API."
-version: 2.1.0
+version: 2.1.1
 homepage: https://github.com/felixdinh/secondary-screen
 repository: https://github.com/felixdinh/secondary-screen
 topics:
