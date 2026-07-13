@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Callback invoked when the primary app sends data to the secondary display.
 typedef ArgumentsCallback = Function(dynamic arguments);
 
+/// Widget that receives payloads sent to a secondary presentation route.
 class SecondaryDisplay extends StatefulWidget {
+  /// Creates a receiver around [child].
   const SecondaryDisplay(
       {super.key, required this.callback, required this.child});
 
+  /// Handles each payload delivered by the platform channel.
   final ArgumentsCallback callback;
+
+  /// UI rendered on the secondary display.
   final Widget child;
 
   @override

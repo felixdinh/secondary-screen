@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.1
+
+- Add dartdoc comments for exported public API elements
+- Refresh lockfiles after the `flutter_bloc` dependency removal in `2.1.0`
+
 ## 2.1.0
 
 > **Breaking:** `flutter_bloc` is no longer a dependency and

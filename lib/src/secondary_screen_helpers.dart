@@ -1,9 +1,11 @@
 import 'display.dart';
 import 'secondary_screen_state.dart';
 
+/// Serialization helpers for secondary screen state and display values.
 class SecondaryScreenHelpers {
   const SecondaryScreenHelpers._();
 
+  /// Converts [state] to a JSON map that can be persisted.
   static Map<String, dynamic>? stateToJson(SecondaryScreenState state) {
     return {
       'status': state.status.name,
@@ -11,6 +13,7 @@ class SecondaryScreenHelpers {
     };
   }
 
+  /// Restores [SecondaryScreenState] from a JSON map.
   static SecondaryScreenState stateFromJson(Map<String, dynamic> json) {
     final displayJson =
         json['currentSecondaryDisplay'] as Map<String, dynamic>?;
@@ -21,6 +24,7 @@ class SecondaryScreenHelpers {
     );
   }
 
+  /// Converts [display] to a JSON map.
   static Map<String, dynamic>? displayToJson(Display? display) {
     return display != null
         ? {
@@ -32,6 +36,7 @@ class SecondaryScreenHelpers {
         : null;
   }
 
+  /// Restores a [Display] from a JSON map.
   static Display? displayFromJson(Map<String, dynamic> json) {
     return Display(
       displayId: json['displayId'],

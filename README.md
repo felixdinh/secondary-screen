@@ -7,9 +7,7 @@
 
 Drive a **dual / secondary screen** from Flutter with a state-manager-agnostic service API — show named routes on the second display, push live data to it, and auto-reconnect when a display is plugged or unplugged. Ideal for **Point of Sale (POS)** setups where the customer sees a live order summary or promotions.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/demo.gif" alt="POS demo" width="100%" />
-</p>
+<img src="https://raw.githubusercontent.com/felixdinh/secondary-screen/master/doc/images/demo.gif" alt="POS secondary screen demo" width="400" />
 
 *The cashier's primary screen (left) drives the customer-facing secondary display (right) in real time.*
 
@@ -33,7 +31,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  secondary_screen: ^2.1.0
+  secondary_screen: ^2.1.1
 ```
 
 Then import it:

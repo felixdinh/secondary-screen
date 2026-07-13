@@ -1,3 +1,6 @@
+/// Controls Android secondary displays from Flutter.
+library;
+
 export 'src/display.dart';
 export 'src/display_manager.dart';
 export 'src/secondary_display_widget.dart';
